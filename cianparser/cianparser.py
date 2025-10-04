@@ -1,6 +1,5 @@
 import cloudscraper
 import time
-
 from cianparser.constants import CITIES, METRO_STATIONS, DEAL_TYPES, OBJECT_SUBURBAN_TYPES
 from cianparser.url_builder import URLBuilder
 from cianparser.proxy_pool import ProxyPool
@@ -18,7 +17,7 @@ def list_metro_stations():
 
 
 class CianParser:
-    def __init__(self, location: str, proxies=None):
+    def __init__(self, location: str, proxies=None, randomize_headers=False):
         """
         Initialize the Cian website parser
         Examples:
@@ -31,7 +30,16 @@ class CianParser:
 
         self.__parser__ = None
         self.__session__ = cloudscraper.create_scraper()
-        self.__session__.headers = {'Accept-Language': 'en'}
+        if randomize_headers:
+            from fake_headers import Headers
+            headers_generator = Headers(
+                browser="chrome", 
+                os="win",
+                headers=True
+            )
+            self.__session__.headers = headers_generator.generate()
+        else:
+            self.__session__.headers = {'Accept-Language': 'en'}
         self.__proxy_pool__ = ProxyPool(proxies=proxies)
         self.__location_name__ = location
         self.__location_id__ = location_id
