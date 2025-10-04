@@ -19,7 +19,10 @@ class FlatListPageParser(BaseListPageParser):
     def parse_list_offers_page(self, html, page_number: int, count_of_pages: int, attempt_number: int):
         list_soup = bs4.BeautifulSoup(html, 'html.parser')
 
-        if list_soup.text.find("Captcha") > 0:
+        title = list_soup.title.string.lower() if list_soup.title else ''
+        is_captcha_by_title = any(keyword in title for keyword in ['captcha', 'robot', 'are you human', 'just a moment', 'проверка'])
+
+        if is_captcha_by_title:
             print(f"\r{page_number} page: there is CAPTCHA... failed to parse page...")
             return False, attempt_number + 1, True
 
