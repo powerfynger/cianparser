@@ -266,30 +266,33 @@ def define_location_data(block, is_sale):
 
 
 def define_price_data(block):
-    elements = block.select("div[data-name='LinkArea']")[0]. \
-        select("span[data-mark='MainPrice']")
-
     price_data = {
         "price_per_month": -1,
-        "commissions": 0,
+        "commissions": -1,
+        "deposit": 0,
     }
 
-    for element in elements:
-        if "₽/мес" in element.text:
-            price_description = element.text
-            price_data["price_per_month"] = int(
-                "".join(price_description[:price_description.find("₽/мес") - 1].split()))
+    price_tag = block.find('span', {'data-mark': 'MainPrice'})
+    if price_tag:
+        price_data['price_per_month'] = int(clean_numeric_value(price_tag.text))
 
-            if "%" in price_description:
-                price_data["commissions"] = int(
-                    price_description[price_description.find("%") - 2:price_description.find("%")].replace(" ", ""))
+    price_info_tag = block.find('p', {'data-mark': 'PriceInfo'})
+    if price_info_tag:
+        info_text = price_info_tag.text.lower()
+        
+        # Комиссия
+        if 'без комиссии' in info_text:
+            price_data['commissions'] = 0
+        else:
+            commission_match = re.search(r'комиссия\s*([\d\s]+)', info_text)
+            # Так как приходит в процентах, например 50%
+            if commission_match:
+                price_data['commissions'] = int(clean_numeric_value(commission_match.group(1)) * 0.01 * price_data['price_per_month'])
 
-            return price_data
-
-        if "₽" in element.text and "млн" not in element.text:
-            price_description = element.text
-            price_data["price"] = int("".join(price_description[:price_description.find("₽") - 1].split()))
-
+        # Залог
+        deposit_match = re.search(r'залог\s*([\d\s]+)₽', info_text)
+        if deposit_match:
+            price_data['deposit'] = int(clean_numeric_value(deposit_match.group(1)))
             return price_data
 
     return price_data
@@ -330,3 +333,15 @@ def define_specification_data(block):
     specification_data["rooms_count"] = define_rooms_count(common_properties)
 
     return specification_data
+
+def clean_numeric_value(value_str: str) -> float|None:
+    if not isinstance(value_str, str):
+        return None
+    try:
+        cleaned_str = re.sub(r'[^\d,.]', '', value_str)
+        number_str = cleaned_str.replace(',', '.')
+        if number_str:
+            return float(number_str)
+    except (ValueError, TypeError):
+        return None
+    return None

@@ -63,7 +63,7 @@ STREET_TYPES = {"ул.", "улица", "аллея", "бульвар", "лини
                 "проспект", "проезд", "раздъезд", "мост", "авеню"}
 
 SPECIFIC_FIELDS_FOR_RENT_LONG = {"price_per_month", "commissions"}
-SPECIFIC_FIELDS_FOR_RENT_SHORT = {"price_per_day"}
+SPECIFIC_FIELDS_FOR_RENT_SHORT = {"price_per_day", "finish_type"}
 SPECIFIC_FIELDS_FOR_SALE = {"price", "residential_complex", "object_type", "finish_type"}
 
 CITIES = [
