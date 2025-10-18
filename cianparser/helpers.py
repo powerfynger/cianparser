@@ -270,6 +270,11 @@ def define_price_data(block):
         "price_per_month": -1,
         "commissions": -1,
         "deposit": 0,
+        "min_rental_date": -1,
+        "payment_info": -1,
+        "commission": -1,
+        "deposit": -1
+        
     }
 
     price_tag = block.find('span', {'data-mark': 'MainPrice'})
@@ -279,21 +284,35 @@ def define_price_data(block):
     price_info_tag = block.find('p', {'data-mark': 'PriceInfo'})
     if price_info_tag:
         info_text = price_info_tag.text.lower()
-        
+
         # Комиссия
         if 'без комиссии' in info_text:
             price_data['commissions'] = 0
         else:
             commission_match = re.search(r'комиссия\s*([\d\s]+)', info_text)
-            # Так как приходит в процентах, например 50%
+            # Так как приходит в процентах, например 50%, вернем 0.5
             if commission_match:
-                price_data['commissions'] = int(clean_numeric_value(commission_match.group(1)) * 0.01 * price_data['price_per_month'])
+                price_data['commissions'] = int(clean_numeric_value(commission_match.group(1)) * 0.01)
 
         # Залог
         deposit_match = re.search(r'залог\s*([\d\s]+)₽', info_text)
         if deposit_match:
             price_data['deposit'] = int(clean_numeric_value(deposit_match.group(1)))
-            return price_data
+        
+        parts = info_text.split(',')
+        
+        min_rental_date = parts[0].strip()
+        payment_info = parts[1].strip()
+        commission = parts[2].strip()
+        deposit = parts[3].strip()
+
+        price_data["min_rental_date"] = min_rental_date
+        price_data["payment_info"] = payment_info
+        price_data["commission"] = commission
+        price_data["deposit"] =deposit
+
+
+
 
     return price_data
 
